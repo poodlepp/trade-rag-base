@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: pgvector/pgvector:pg17
+    image: pgvector/pgvector:pg16
     container_name: trade-rag-postgres
     environment:
       POSTGRES_DB: trade_rag
@@ -17,7 +17,7 @@ services:
       retries: 5
 
   redis:
-    image: redis:8-alpine
+    image: redis:7.4-alpine
     container_name: trade-rag-redis
     ports:
       - "6379:6379"
@@ -30,7 +30,7 @@ services:
       retries: 5
 
   minio:
-    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
     container_name: trade-rag-minio
     command: server /data --console-address ":9001"
     environment:
