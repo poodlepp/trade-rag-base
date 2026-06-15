@@ -1,0 +1,145 @@
+spring:
+  application:
+    name: trade-rag-base
+
+  # ========== Database ==========
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/trade_rag}
+    username: ${SPRING_DATASOURCE_USERNAME:trade_rag}
+    password: ${SPRING_DATASOURCE_PASSWORD:trade_rag}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE:20}
+      minimum-idle: ${SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE:5}
+      connection-timeout: ${SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT:30000}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  # ========== Redis ==========
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
+      password: ${SPRING_REDIS_PASSWORD:}
+      database: ${SPRING_REDIS_DATABASE:1}
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+
+  # ========== Async Task Pool ==========
+  task:
+    execution:
+      pool:
+        core-size: ${SPRING_TASK_EXECUTION_POOL_CORE_SIZE:4}
+        max-size: ${SPRING_TASK_EXECUTION_POOL_MAX_SIZE:8}
+        queue-capacity: ${SPRING_TASK_EXECUTION_POOL_QUEUE_CAPACITY:100}
+      thread-name-prefix: index-task-
+
+  # ========== File Upload ==========
+  servlet:
+    multipart:
+      max-file-size: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:50MB}
+      max-request-size: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:100MB}
+
+  # ========== Spring AI ==========
+  ai:
+    openai:
+      # Default values target DashScope's OpenAI-compatible API. Override them
+      # for OpenAI or another compatible provider through environment variables.
+      base-url: ${OPENAI_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode}
+      api-key: ${OPENAI_API_KEY:}
+      chat:
+        options:
+          model: ${OPENAI_CHAT_MODEL:qwen3-max}
+          temperature: ${OPENAI_CHAT_TEMPERATURE:0.1}
+          max-tokens: ${OPENAI_CHAT_MAX_TOKENS:2048}
+      embedding:
+        base-url: ${OPENAI_EMBEDDING_BASE_URL:${spring.ai.openai.base-url}}
+        api-key: ${OPENAI_EMBEDDING_API_KEY:${spring.ai.openai.api-key}}
+        options:
+          model: ${OPENAI_EMBEDDING_MODEL:text-embedding-v3}
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: ${SPRING_CACHE_REDIS_TIME_TO_LIVE:600000}
+      cache-null-values: false
+
+# ========== MinIO ==========
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  bucket: ${MINIO_BUCKET:trade-rag}
+
+# ========== Reranker ==========
+reranker:
+  endpoint: ${RERANKER_ENDPOINT:https://dashscope.aliyuncs.com/api/v1/services/rerank/text-rerank/text-rerank}
+  api-key: ${RERANKER_API_KEY:${OPENAI_API_KEY:}}
+  model: ${RERANKER_MODEL:gte-rerank-v2}
+  timeout-ms: ${RERANKER_TIMEOUT_MS:800}
+  top-n: ${RERANKER_TOP_N:5}
+
+# ========== RAG Parameters ==========
+rag:
+  chunk:
+    size: ${RAG_CHUNK_SIZE:512}
+    overlap: ${RAG_CHUNK_OVERLAP:64}
+  retrieval:
+    vector-top-k: ${RAG_RETRIEVAL_VECTOR_TOP_K:20}
+    fulltext-top-k: ${RAG_RETRIEVAL_FULLTEXT_TOP_K:20}
+    return-top-n: ${RAG_RETRIEVAL_RETURN_TOP_N:5}
+    min-score: ${RAG_RETRIEVAL_MIN_SCORE:0.5}
+  context:
+    max-tokens: ${RAG_CONTEXT_MAX_TOKENS:3000}
+  cache:
+    embedding-ttl: ${RAG_CACHE_EMBEDDING_TTL:7d}
+    query-ttl: ${RAG_CACHE_QUERY_TTL:10m}
+
+# ========== Sa-Token ==========
+sa-token:
+  token-name: Authorization
+  token-prefix: Bearer
+  timeout: ${SA_TOKEN_TIMEOUT:86400}
+  active-timeout: -1
+  is-concurrent: true
+  is-share: false
+  is-read-header: true
+  token-style: uuid
+  is-log: false
+
+# ========== Monitoring ==========
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+# ========== Logging ==========
+logging:
+  level:
+    com.trade.ragbase: INFO
+    org.springframework.ai: WARN
+  pattern:
+    console: "%d{HH:mm:ss} [%thread] [%X{traceId}] %-5level %logger{36} - %msg%n"
+
+server:
+  port: ${SERVER_PORT:8080}
