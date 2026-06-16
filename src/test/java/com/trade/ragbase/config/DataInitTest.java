@@ -15,7 +15,7 @@ import com.trade.ragbase.entity.KbDocument;
 import com.trade.ragbase.repository.KbDocumentRepository;
 import com.trade.ragbase.service.IndexService;
 
-class DataInitializerTest {
+class DataInitTest {
 
     @Test
     void skipsWhenDisabled() throws Exception {
