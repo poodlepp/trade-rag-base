@@ -7,6 +7,7 @@ import com.trade.ragbase.service.splitter.ChunkSplitter;
 import com.trade.ragbase.service.splitter.SlidingWindowChunkSplitter;
 import com.trade.ragbase.service.splitter.StructureAwareChunkSplitter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,7 @@ public class ChunkService {
     private final int defaultChunkSize;
     private final int defaultOverlap;
 
+    @Autowired
     public ChunkService(
             SlidingWindowChunkSplitter slidingWindowSplitter,
             StructureAwareChunkSplitter structureAwareSplitter,

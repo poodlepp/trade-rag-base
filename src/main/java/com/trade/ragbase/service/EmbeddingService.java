@@ -16,6 +16,7 @@ import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.embedding.EmbeddingRequest;
 import org.springframework.ai.embedding.EmbeddingResponse;
 import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.retry.annotation.Backoff;
@@ -36,6 +37,7 @@ public class EmbeddingService {
     private final Duration embeddingTtl;
     private final int batchSize;
 
+    @Autowired
     public EmbeddingService(
             EmbeddingModel embeddingModel,
             StringRedisTemplate redisTemplate,

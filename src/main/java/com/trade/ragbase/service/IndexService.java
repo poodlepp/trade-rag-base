@@ -13,6 +13,7 @@ import com.trade.ragbase.repository.KbDocumentRepository;
 import com.trade.ragbase.service.loader.ParseResult;
 import com.trade.ragbase.service.splitter.ChunkResult;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,7 @@ public class IndexService {
     private final EmbeddingService embeddingService;
     private final IndexTaskLauncher taskLauncher;
 
+    @Autowired
     public IndexService(
             KbDocumentRepository documentRepository,
             DocChunkRepository chunkRepository,
