@@ -56,7 +56,7 @@ spring:
     openai:
       # Default values target DashScope's OpenAI-compatible API. Override them
       # for OpenAI or another compatible provider through environment variables.
-      base-url: ${OPENAI_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode}
+      base-url: ${OPENAI_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
       api-key: ${OPENAI_API_KEY:}
       chat:
         options:
