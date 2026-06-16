@@ -1,5 +1,6 @@
 package com.trade.ragbase.service;
 
+import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +11,7 @@ import com.trade.ragbase.entity.KbDocument;
 import com.trade.ragbase.repository.DocChunkRepository;
 import com.trade.ragbase.repository.IndexTaskRepository;
 import com.trade.ragbase.repository.KbDocumentRepository;
+import com.trade.ragbase.security.UserContext;
 import com.trade.ragbase.service.loader.ParseResult;
 import com.trade.ragbase.service.splitter.ChunkResult;
 import lombok.extern.slf4j.Slf4j;
@@ -26,18 +28,20 @@ public class IndexService {
     private final KbDocumentRepository documentRepository;
     private final DocChunkRepository chunkRepository;
     private final IndexTaskRepository taskRepository;
+    private final DocumentLoaderService loaderService;
     private final ChunkService chunkService;
     private final EmbeddingService embeddingService;
+    private final MinioStorageService minioStorageService;
     private final IndexTaskLauncher taskLauncher;
 
-    @Autowired
     public IndexService(
             KbDocumentRepository documentRepository,
             DocChunkRepository chunkRepository,
             IndexTaskRepository taskRepository,
             ChunkService chunkService,
             EmbeddingService embeddingService) {
-        this(documentRepository, chunkRepository, taskRepository, chunkService, embeddingService, null);
+        this(documentRepository, chunkRepository, taskRepository, null, chunkService,
+                embeddingService, null, null);
     }
 
     public IndexService(
@@ -47,11 +51,27 @@ public class IndexService {
             ChunkService chunkService,
             EmbeddingService embeddingService,
             IndexTaskLauncher taskLauncher) {
+        this(documentRepository, chunkRepository, taskRepository, null, chunkService,
+                embeddingService, null, taskLauncher);
+    }
+
+    @Autowired
+    public IndexService(
+            KbDocumentRepository documentRepository,
+            DocChunkRepository chunkRepository,
+            IndexTaskRepository taskRepository,
+            DocumentLoaderService loaderService,
+            ChunkService chunkService,
+            EmbeddingService embeddingService,
+            MinioStorageService minioStorageService,
+            IndexTaskLauncher taskLauncher) {
         this.documentRepository = documentRepository;
         this.chunkRepository = chunkRepository;
         this.taskRepository = taskRepository;
+        this.loaderService = loaderService;
         this.chunkService = chunkService;
         this.embeddingService = embeddingService;
+        this.minioStorageService = minioStorageService;
         this.taskLauncher = taskLauncher;
     }
 
@@ -65,11 +85,34 @@ public class IndexService {
             executeWithText(task.getId(), docId, textContent);
             return;
         }
-        taskLauncher.launchWithText(task.getId(), docId, textContent);
+        taskLauncher.launchWithText(task.getId(), docId, textContent,
+                UserContext.getUserId(), UserContext.getDepartmentId(), UserContext.getRole());
     }
 
     public void submitIndexTask(Long docId) {
-        throw new UnsupportedOperationException("当前练习项目暂未迁移 MinIO 文件读取索引，请使用 submitIndexTask(docId, textContent)");
+        IndexTask task = new IndexTask();
+        task.setDocId(docId);
+        task.setTaskType("INDEX");
+        taskRepository.save(task);
+
+        if (taskLauncher == null) {
+            executeFromMinio(task.getId(), docId);
+            return;
+        }
+        taskLauncher.launchFromMinio(task.getId(), docId,
+                UserContext.getUserId(), UserContext.getDepartmentId(), UserContext.getRole());
+    }
+
+    public void executeFromMinio(Long taskId, Long docId) {
+        KbDocument document = documentRepository.findById(docId).orElseThrow();
+        try {
+            byte[] fileBytes = minioStorageService.download(document.getMinioPath());
+            ParseResult parseResult = loaderService.load(
+                    new ByteArrayInputStream(fileBytes), document.getFileName());
+            doIndex(taskId, docId, document, parseResult);
+        } catch (Exception exception) {
+            markFailed(taskId, docId, "从 MinIO 读取文件失败：" + exception.getMessage());
+        }
     }
 
     public void executeWithText(Long taskId, Long docId, String textContent) {

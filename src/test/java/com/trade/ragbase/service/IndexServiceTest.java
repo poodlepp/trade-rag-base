@@ -139,6 +139,6 @@ class IndexServiceTest {
         assertThat(taskCaptor.getValue().getDocId()).isEqualTo(11L);
         assertThat(taskCaptor.getValue().getTaskType()).isEqualTo("INDEX");
         assertThat(taskCaptor.getValue().getStatus()).isEqualTo(IndexTask.TaskStatus.PENDING);
-        verify(taskLauncher).launchWithText(123L, 11L, "直接索引文本");
+        verify(taskLauncher).launchWithText(123L, 11L, "直接索引文本", 1L, "default", "admin");
     }
 }

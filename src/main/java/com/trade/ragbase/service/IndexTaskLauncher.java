@@ -1,5 +1,6 @@
 package com.trade.ragbase.service;
 
+import com.trade.ragbase.security.UserContext;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -14,7 +15,22 @@ public class IndexTaskLauncher {
     }
 
     @Async("indexTaskExecutor")
-    public void launchWithText(Long taskId, Long docId, String textContent) {
-        indexService.executeWithText(taskId, docId, textContent);
+    public void launchFromMinio(Long taskId, Long docId, Long userId, String departmentId, String role) {
+        UserContext.set(userId, departmentId, role);
+        try {
+            indexService.executeFromMinio(taskId, docId);
+        } finally {
+            UserContext.clear();
+        }
+    }
+
+    @Async("indexTaskExecutor")
+    public void launchWithText(Long taskId, Long docId, String textContent, Long userId, String departmentId, String role) {
+        UserContext.set(userId, departmentId, role);
+        try {
+            indexService.executeWithText(taskId, docId, textContent);
+        } finally {
+            UserContext.clear();
+        }
     }
 }
