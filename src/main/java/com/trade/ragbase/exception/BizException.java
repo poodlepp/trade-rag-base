@@ -9,6 +9,18 @@ public class BizException extends RuntimeException {
         this.code = code;
     }
 
+    public static BizException badRequest(String message) {
+        return new BizException(400, message);
+    }
+
+    public static BizException forbidden(String message) {
+        return new BizException(403, message);
+    }
+
+    public static BizException notFound(String message) {
+        return new BizException(404, message);
+    }
+
     public int getCode() {
         return code;
     }
